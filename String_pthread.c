@@ -69,10 +69,45 @@ int readf(FILE *fp)
 		return -1;
 }
 
-void *sub_string(void *threadid) 	/*each process searches in the string with the step of nprocs until it reach or beyond*/ 
-	/*the (n1-n2)th char which is the last possible beginning of the substring*/
+void *sub_string(void *threadid)
 {
+    int tid, start, end;
+    int i, j, k;
+    int count;
+    int local_total = 0;
 
+    tid = (long)threadid;
+
+    start = tid * nlocal;
+    end = start + nlocal - 1;
+
+    for(i = start; i <= end && i <= (n1 - n2); i++)
+    {
+        count = 0;
+
+        for(j = i, k = 0; k < n2; j++, k++)
+        {
+            if(*(s1 + j) != *(s2 + k))
+            {
+                break;
+            }
+            else
+            {
+                count++;
+            }
+
+            if(count == n2)
+            {
+                local_total++;
+            }
+        }
+    }
+
+    pthread_mutex_lock(&total_lock);
+    total += local_total;
+    pthread_mutex_unlock(&total_lock);
+
+    pthread_exit(NULL);
 }
 
 
